@@ -1,10 +1,7 @@
 import base64
 import io
-import json
 
 import face_recognition
-import requests
-from PIL import Image
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -28,9 +25,6 @@ def recognize_image(request):
         # Guardar la imagen para verificar visualmente
         with open("received_image.jpg", "wb") as f:
             f.write(image_bytes)
-        # Mostrar la imagen para verificar
-        img = Image.open(io.BytesIO(image_bytes))
-        img.show()
 
         encodings = face_recognition.face_encodings(uploaded_image)
 
@@ -42,8 +36,10 @@ def recognize_image(request):
 
         uploaded_encoding = encodings[0]
         result = compare_encodings(uploaded_encoding)
+        print(result)
         return Response({"result": result}, status=status.HTTP_200_OK)
     except Exception as e:
+        print(f"Error procesando la imagen: {e}")
         return Response(
             {
                 "error": str(e),
@@ -66,19 +62,3 @@ def log_message(request):
         if log_message.startswith("Access"):
             print()
     return Response({"message": "Log received"}, status=status.HTTP_200_OK)
-
-
-def test_api(img_name):
-    image_path = f"/home/fabri/Escritorio/img/{img_name}"
-
-    with open(image_path, "rb") as image_file:
-        encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
-
-    # Crear el payload con la imagen codificada
-    payload = {"encoding": json.dumps(encoded_image)}
-
-    url = "http://localhost:8000/api/recognize/"
-
-    response = requests.post(url, json=payload)
-
-    print(response.json())
